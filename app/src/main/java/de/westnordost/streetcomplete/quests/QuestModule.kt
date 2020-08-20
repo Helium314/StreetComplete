@@ -78,6 +78,7 @@ import de.westnordost.streetcomplete.quests.traffic_signals_button.AddTrafficSig
 import de.westnordost.streetcomplete.quests.traffic_signals_sound.AddTrafficSignalsSound
 import de.westnordost.streetcomplete.quests.way_lit.AddWayLit
 import de.westnordost.streetcomplete.quests.wheelchair_access.*
+import de.westnordost.streetcomplete.quests.show_poi.*
 import java.util.concurrent.FutureTask
 import javax.inject.Singleton
 
@@ -185,7 +186,15 @@ object QuestModule
         AddPowerPolesMaterial(o),
         AddCarWashType(o),
         AddBenchBackrest(o),
-        AddTrafficSignalsButton(o)
+        AddTrafficSignalsButton(o),
+        
+        // 9. show POIs
+        ShowBikeParking(o),
+        ShowBench(o),
+        ShowBusiness(o),
+        ShowWasteBasket(o),
+        ShowRecycling(o),
+        ShowTelephone(o)
     ))
 
     @Provides @Singleton fun osmNoteQuestType(): OsmNoteQuestType = OsmNoteQuestType()
