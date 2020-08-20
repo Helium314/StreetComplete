@@ -13,6 +13,7 @@ import de.westnordost.streetcomplete.data.visiblequests.OrderedVisibleQuestTypes
 import de.westnordost.streetcomplete.ktx.values
 import de.westnordost.streetcomplete.map.tangram.toLngLat
 import de.westnordost.streetcomplete.quests.bikeway.AddCycleway
+import de.westnordost.streetcomplete.quests.show_poi.*
 import de.westnordost.streetcomplete.util.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -130,7 +131,8 @@ class QuestPinLayerManager @Inject constructor(
                 "kind" to questIconName,
                 "importance" to getQuestImportance(quest).toString(),
                 MARKER_QUEST_GROUP to group.name,
-                MARKER_QUEST_ID to quest.id!!.toString()
+                MARKER_QUEST_ID to quest.id!!.toString(),
+                "poi" to isPoi(quest)
             )
             Point(position.toLngLat(), properties)
         }
@@ -140,6 +142,18 @@ class QuestPinLayerManager @Inject constructor(
         }
     }
 
+    private fun isPoi(quest: Quest): String {
+        return when(quest.type) {
+            is ShowBikeParking -> "violet"
+            is ShowBench -> "chocolate"
+            is ShowBusiness -> "orange"
+            is ShowWasteBasket -> "lightgreen"
+            is ShowRecycling -> "green"
+            is ShowTelephone -> "yellow"
+            else -> "no"
+        };
+    }
+    
     private fun remove(questId: Long, group: QuestGroup) {
         quests[group]?.remove(questId)
     }
