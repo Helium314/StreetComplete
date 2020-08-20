@@ -54,7 +54,9 @@ layers:
     streetcomplete_quests:
         data: { source: streetcomplete_quests }
         pins:
-            filter: { $zoom: { min: 14 } }
+            filter:
+                $zoom: { min: 14 }
+                poi: no
             draw:
                 quest-icons:
                     interactive: true
@@ -65,8 +67,23 @@ layers:
                     sprite: function() { return feature.kind }
                     sprite_default: quest
                     offset: [-17px, -66px]
+        poi_dots:
+            filter:
+                not: { poi: no }
+                $zoom: { min: 18 }
+            draw:
+                quest-dots:
+                    interactive: true
+                    priority: 1
+                    order: 0
+                    size: 24px
+                    color: function() { return feature.poi }
+                    collide: false
+                    offset: [-2.5px, -22px]
         dots_no_collide:
-            filter: { $zoom: { min: 16 } }
+            filter:
+                $zoom: { min: 16 }
+                poi: no
             draw:
                 quest-dots:
                     priority: 1
@@ -75,7 +92,9 @@ layers:
                     collide: false
                     offset: [-2.5px, -22px]
         dots:
-            filter: { $zoom: { min: 13, max: 15.999 } }
+            filter:
+                $zoom: { min: 13, max: 15.999 }
+                poi: no
             draw:
                 quest-dots:
                     priority: 1
