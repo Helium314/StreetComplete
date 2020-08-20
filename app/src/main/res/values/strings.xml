@@ -874,5 +874,11 @@ Otherwise, you can download another keyboard in the app store. Popular keyboards
     <string name="at_conscription_and_street_number">conscription number %1$s, orientation number %2$s:</string>
     <string name="at_conscription_number">conscription number %s:</string>
     <string name="at_housenumber">house number %s:</string>
-
+    <string name="quest_thisIsBikeParking_title">Show POI: Bicycle Parking</string>
+    <string name="quest_thisIsBench_title">Show POI: Bench</string>
+    <string name="quest_thisIsTelephone_title">Show POI: Telephone</string>
+    <string name="quest_thisIsRecycling_title">Show POI: Recycling</string>
+    <string name="quest_thisIsWasteBasket_title">Show POI: Waste Basket</string>
+    <string name="quest_thisIsBusiness_name_title">Show POI: %1$s (%2$s)</string>
+    <string name="quest_thisIsBusiness_no_name_title">Show POI: %s</string>
 </resources>
