@@ -11,6 +11,7 @@ class ShowWasteBasket(o: OverpassMapDataAndGeometryApi) : SimpleOverpassQuestTyp
     override val commitMessage = "I hope this does not get committed"
     override val wikiLink = "nope"
     override val icon = R.drawable.ic_quest_recycling_materials // replace later, but need own icon...
+    override val dotColor = "lightgreen"
 
     override fun getTitle(tags: Map<String, String>) =
         R.string.quest_thisIsWasteBasket_title
