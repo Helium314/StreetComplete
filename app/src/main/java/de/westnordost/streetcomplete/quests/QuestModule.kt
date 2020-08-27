@@ -194,7 +194,8 @@ object QuestModule
         ShowBusiness(o),
         ShowWasteBasket(o),
         ShowRecycling(o),
-        ShowTelephone(o)
+        ShowMachine(o),
+        ShowVacant(o)
     ))
 
     @Provides @Singleton fun osmNoteQuestType(): OsmNoteQuestType = OsmNoteQuestType()
