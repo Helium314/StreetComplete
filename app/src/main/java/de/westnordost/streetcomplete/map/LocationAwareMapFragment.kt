@@ -6,12 +6,11 @@ import android.content.Context
 import android.graphics.PointF
 import android.hardware.SensorManager
 import android.location.Location
+import android.view.animation.DecelerateInterpolator
 import android.location.LocationManager
 import android.view.WindowManager
-import android.view.animation.DecelerateInterpolator
 import androidx.core.content.edit
-import androidx.core.content.getSystemService
-import com.mapzen.tangram.MapController
+import com.mapzen.tangram.*
 import de.westnordost.osmapi.map.data.LatLon
 import de.westnordost.osmapi.map.data.OsmLatLon
 import de.westnordost.streetcomplete.R
@@ -20,9 +19,7 @@ import de.westnordost.streetcomplete.ktx.toDp
 import de.westnordost.streetcomplete.location.FineLocationManager
 import de.westnordost.streetcomplete.map.tangram.Marker
 import de.westnordost.streetcomplete.util.EARTH_CIRCUMFERENCE
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.pow
+import kotlin.math.*
 
 /** Manages a map that shows the device's GPS location and orientation as markers on the map with
  *  the option to let the screen follow the location and rotation */
@@ -86,11 +83,15 @@ open class LocationAwareMapFragment : MapFragment() {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        compass = Compass(context.getSystemService<SensorManager>()!!,
-            context.getSystemService<WindowManager>()!!.defaultDisplay,
+        compass = Compass(
+            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager,
+            (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay,
             this::onCompassRotationChanged
         )
-        locationManager = FineLocationManager(context.getSystemService<LocationManager>()!!, this::onLocationChanged)
+        locationManager = FineLocationManager(
+            context.getSystemService(Context.LOCATION_SERVICE) as LocationManager,
+            this::onLocationChanged
+        )
     }
 
     override fun onResume() {

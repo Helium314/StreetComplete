@@ -10,8 +10,14 @@ class NodeWayMap<T>(ways: List<List<T>>) {
             val firstNode = way.first()
             val lastNode = way.last()
 
-            wayEndpoints.getOrPut(firstNode, { ArrayList() }).add(way)
-            wayEndpoints.getOrPut(lastNode, { ArrayList() }).add(way)
+            if (!wayEndpoints.containsKey(firstNode)) {
+                wayEndpoints[firstNode] = ArrayList()
+            }
+            if (!wayEndpoints.containsKey(lastNode)) {
+                wayEndpoints[lastNode] = ArrayList()
+            }
+            wayEndpoints[firstNode]!!.add(way)
+            wayEndpoints[lastNode]!!.add(way)
         }
     }
 

@@ -8,7 +8,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.commit
 import de.westnordost.osmapi.map.data.LatLon
 import de.westnordost.osmapi.map.data.OsmLatLon
 import de.westnordost.osmapi.map.data.OsmNode
@@ -111,10 +110,10 @@ class ShowQuestFormsActivity : AppCompatActivity(), AbstractQuestAnswerFragment.
         f.arguments = args
 
         questFormContainer.visibility = View.VISIBLE
-        supportFragmentManager.commit {
-            replace(R.id.questForm, f)
-            addToBackStack(null)
-        }
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.questForm, f)
+            .addToBackStack(null)
+            .commit()
     }
 
     override fun onAnsweredQuest(questId: Long, group: QuestGroup, answer: Any) { onBackPressed() }

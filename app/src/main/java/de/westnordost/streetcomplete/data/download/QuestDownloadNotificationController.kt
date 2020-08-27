@@ -1,11 +1,10 @@
 package de.westnordost.streetcomplete.data.download
 
 import android.app.*
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.core.app.NotificationCompat
-import androidx.core.content.getSystemService
 import de.westnordost.streetcomplete.ApplicationConstants
 import de.westnordost.streetcomplete.MainActivity
 import de.westnordost.streetcomplete.R
@@ -13,7 +12,7 @@ import de.westnordost.streetcomplete.R
 /** Shows the download progress in the Android notifications area */
 class QuestDownloadNotificationController(
     private val service: Service,
-    private val notificationChannelId: String,
+    notificationChannelId: String,
     private val notificationId: Int
 ) {
     private val notificationBuilder = createNotificationBuilder(notificationChannelId)
@@ -26,25 +25,33 @@ class QuestDownloadNotificationController(
         service.stopForeground(true)
     }
 
-    private fun createNotificationBuilder(notificationChannelId: String): NotificationCompat.Builder {
+    private fun createNotificationBuilder(notificationChannelId: String): Notification.Builder {
         val pendingIntent = PendingIntent.getActivity(service, 0, Intent(service, MainActivity::class.java), 0)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
+        val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createNotificationChannel()
+            Notification.Builder(service, notificationChannelId)
+        } else {
+            Notification.Builder(service)
         }
-        return NotificationCompat.Builder(service, notificationChannelId)
+        builder
             .setSmallIcon(R.mipmap.ic_dl_notification)
             .setContentTitle(ApplicationConstants.NAME)
             .setContentText(service.resources.getString(R.string.notification_downloading))
             .setContentIntent(pendingIntent)
-            .setCategory(NotificationCompat.CATEGORY_PROGRESS)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            builder.setCategory(Notification.CATEGORY_PROGRESS)
+        }
+        return builder
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private fun createNotificationChannel() {
-        val mgr = service.application.getSystemService<NotificationManager>()!!
+        val mgr = (service.application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
         mgr.createNotificationChannel(
             NotificationChannel(
-                notificationChannelId,
+                ApplicationConstants.NOTIFICATIONS_CHANNEL_DOWNLOAD,
                 service.getString(R.string.notification_channel_download),
                 NotificationManager.IMPORTANCE_LOW
             )

@@ -4,6 +4,7 @@ import android.app.Activity.RESULT_OK
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
@@ -14,8 +15,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.content.FileProvider
-import androidx.core.net.toUri
-import androidx.core.view.isGone
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -56,9 +55,13 @@ class AttachPhotoFragment : Fragment() {
     }
 
     private fun updateHintVisibility(){
-        val isImagePathsEmpty = imagePaths.isEmpty()
-        photosListView?.isGone = isImagePathsEmpty
-        hintView?.isGone = !isImagePathsEmpty
+        if (imagePaths.isEmpty()) {
+            photosListView?.visibility = View.GONE
+            hintView?.visibility = View.VISIBLE
+        } else {
+            photosListView?.visibility = View.VISIBLE
+            hintView?.visibility = View.GONE
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -102,7 +105,7 @@ class AttachPhotoFragment : Fragment() {
                         //Use FileProvider for getting the content:// URI, see: https://developer.android.com/training/camera/photobasics.html#TaskPath
                         FileProvider.getUriForFile(requireContext(),getString(R.string.fileprovider_authority),photoFile)
                     } else {
-                        photoFile.toUri()
+                        Uri.fromFile(photoFile)
                     }
                     currentImagePath = photoFile.path
                     takePhotoIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri)

@@ -4,17 +4,19 @@ import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.content.Intent
 import android.graphics.Outline
+import android.net.Uri
 import android.os.Build
 import android.view.View
 import android.view.ViewOutlineProvider
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
 import androidx.core.animation.doOnStart
-import androidx.core.net.toUri
-import androidx.core.view.isGone
 import de.westnordost.streetcomplete.R
 import de.westnordost.streetcomplete.ktx.tryStartActivity
 import kotlinx.android.synthetic.main.fragment_country_info_dialog.*
+import kotlinx.android.synthetic.main.fragment_country_info_dialog.solvedQuestsContainer
+import kotlinx.android.synthetic.main.fragment_country_info_dialog.solvedQuestsText
+import kotlinx.android.synthetic.main.fragment_country_info_dialog.titleView
 import java.util.*
 import kotlin.math.min
 import kotlin.math.pow
@@ -80,7 +82,7 @@ class CountryInfoFragment : AbstractInfoFakeDialogFragment(R.layout.fragment_cou
         solvedQuestsContainer.scaleY = scale
 
         val shouldShowRank = rank != null && rank < 500 && questCount > 50
-        countryRankTextView.isGone = !shouldShowRank
+        countryRankTextView.visibility = if (shouldShowRank) View.VISIBLE else View.GONE
         if (shouldShowRank) {
             countryRankTextView.text = resources.getString(
                 R.string.user_statistics_country_rank, rank, countryLocale.displayCountry
@@ -134,7 +136,7 @@ class CountryInfoFragment : AbstractInfoFakeDialogFragment(R.layout.fragment_cou
     }
 
     private fun openUrl(url: String): Boolean {
-        val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
         return tryStartActivity(intent)
     }
 }

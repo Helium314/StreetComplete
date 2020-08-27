@@ -15,7 +15,6 @@ import android.widget.RelativeLayout
 import androidx.annotation.UiThread
 import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
-import androidx.core.view.isInvisible
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import de.westnordost.osmapi.map.data.LatLon
@@ -98,8 +97,8 @@ class SplitWayFragment : Fragment(R.layout.fragment_split_way),
         cancelButton.setOnClickListener { activity?.onBackPressed() }
         undoButton.setOnClickListener { onClickUndo() }
 
-        undoButton.isInvisible = !hasChanges
-        okButton.isInvisible = !isFormComplete
+        undoButton.visibility = if (hasChanges) View.VISIBLE else View.INVISIBLE
+        okButton.visibility = if (isFormComplete) View.VISIBLE else View.INVISIBLE
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             val cornerRadius = resources.getDimension(R.dimen.speech_bubble_rounded_corner_radius)

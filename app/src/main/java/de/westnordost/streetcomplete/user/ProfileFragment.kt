@@ -5,10 +5,9 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
-import androidx.core.net.toUri
-import androidx.core.view.isGone
 import androidx.fragment.app.Fragment
 import de.westnordost.streetcomplete.Injector
 import de.westnordost.streetcomplete.R
@@ -124,18 +123,19 @@ class ProfileFragment : Fragment(R.layout.fragment_profile),
     private suspend fun updateUnpublishedQuestsText() {
         val unsyncedChanges = withContext(Dispatchers.IO) { unsyncedChangesCountSource.count }
         unpublishedQuestsText.text = getString(R.string.unsynced_quests_description, unsyncedChanges)
-        unpublishedQuestsText.isGone = unsyncedChanges <= 0
+        unpublishedQuestsText.visibility = if (unsyncedChanges > 0) View.VISIBLE else View.GONE
     }
 
     private fun updateDaysActiveText() {
         val daysActive = userStore.daysActive
-        daysActiveContainer.isGone = daysActive <= 0
+        daysActiveContainer.visibility = if (daysActive > 0) View.VISIBLE else View.GONE
         daysActiveText.text = daysActive.toString()
     }
 
     private fun updateGlobalRankText() {
         val rank = userStore.rank
-        globalRankContainer.isGone = rank <= 0 || questStatisticsDao.getTotalAmount() <= 100
+        val shouldShow = rank > 0 && questStatisticsDao.getTotalAmount() > 100
+        globalRankContainer.visibility = if (shouldShow) View.VISIBLE else View.GONE
         globalRankText.text = "#$rank"
     }
 
@@ -143,11 +143,11 @@ class ProfileFragment : Fragment(R.layout.fragment_profile),
         val statistics = withContext(Dispatchers.IO) {
             countryStatisticsDao.getCountryWithBiggestSolvedCount()
         }
-        if (statistics == null) localRankContainer.isGone = true
+        if (statistics == null) localRankContainer.visibility = View.GONE
         else {
             val shouldShow = statistics.rank != null && statistics.rank > 0 && statistics.solvedCount > 50
             val countryLocale = Locale("", statistics.countryCode)
-            localRankContainer.isGone = !shouldShow
+            localRankContainer.visibility = if (shouldShow) View.VISIBLE else View.GONE
             localRankText.text = "#${statistics.rank}"
             localRankLabel.text = getString(R.string.user_profile_local_rank, countryLocale.displayCountry)
         }
@@ -155,12 +155,12 @@ class ProfileFragment : Fragment(R.layout.fragment_profile),
 
     private suspend fun updateAchievementLevelsText() {
         val levels = withContext(Dispatchers.IO) { userAchievementsDao.getAll().values.sum() }
-        achievementLevelsContainer.isGone = levels <= 0
+        achievementLevelsContainer.visibility = if (levels > 0) View.VISIBLE else View.GONE
         achievementLevelsText.text = "$levels"
     }
 
     private fun openUrl(url: String): Boolean {
-        val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
         return tryStartActivity(intent)
     }
 

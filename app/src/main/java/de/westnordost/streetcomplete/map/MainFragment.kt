@@ -26,16 +26,14 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.UiThread
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.PopupMenu
-import androidx.core.content.getSystemService
 import androidx.core.graphics.minus
 import androidx.core.graphics.toPointF
 import androidx.core.graphics.toRectF
 import androidx.core.view.children
-import androidx.core.view.isGone
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE
-import androidx.fragment.app.commit
+import androidx.fragment.app.FragmentTransaction
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import de.westnordost.osmapi.map.data.BoundingBox
 import de.westnordost.osmapi.map.data.LatLon
@@ -61,15 +59,17 @@ import de.westnordost.streetcomplete.location.LocationState
 import de.westnordost.streetcomplete.location.LocationUtil
 import de.westnordost.streetcomplete.map.tangram.CameraPosition
 import de.westnordost.streetcomplete.quests.*
+import de.westnordost.streetcomplete.util.SoundFx
 import de.westnordost.streetcomplete.util.*
 import kotlinx.android.synthetic.main.fragment_main.*
+import java.util.*
+import javax.inject.Inject
+import kotlin.math.PI
+import de.westnordost.streetcomplete.util.initialBearingTo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import java.util.*
-import javax.inject.Inject
-import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -133,7 +133,10 @@ class MainFragment : Fragment(R.layout.fragment_main),
     override fun onAttach(context: Context) {
         super.onAttach(context)
 
-        locationManager = FineLocationManager(context.getSystemService<LocationManager>()!!, this::onLocationChanged)
+        locationManager = FineLocationManager(
+            context.getSystemService(Context.LOCATION_SERVICE) as LocationManager,
+            this::onLocationChanged
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -547,7 +550,7 @@ class MainFragment : Fragment(R.layout.fragment_main),
     }
 
     private fun isConnected(): Boolean {
-        val connectivityManager = context?.getSystemService<ConnectivityManager>()
+        val connectivityManager = context?.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager?
         val activeNetworkInfo = connectivityManager?.activeNetworkInfo
         return activeNetworkInfo != null && activeNetworkInfo.isConnected
     }
@@ -640,8 +643,9 @@ class MainFragment : Fragment(R.layout.fragment_main),
         val intersection = findClosestIntersection(mapControls, target)
         if (intersection != null) {
             val intersectionPosition = mapFragment.getPositionAt(intersection)
-            locationPointerPin.isGone = intersectionPosition == null
             if (intersectionPosition != null) {
+                locationPointerPin.visibility = View.VISIBLE
+
                 val angleAtIntersection = position.initialBearingTo(intersectionPosition)
                 locationPointerPin.pinRotation = angleAtIntersection.toFloat() + (180 * rotation / PI).toFloat()
 
@@ -650,6 +654,8 @@ class MainFragment : Fragment(R.layout.fragment_main),
                 val offsetY = (-cos(a) / 2.0 + 0.5) * locationPointerPin.height
                 locationPointerPin.x = intersection.x - offsetX.toFloat()
                 locationPointerPin.y = intersection.y - offsetY.toFloat()
+            } else {
+                locationPointerPin.visibility = View.GONE
             }
         } else {
             locationPointerPin.visibility = View.GONE
@@ -676,7 +682,7 @@ class MainFragment : Fragment(R.layout.fragment_main),
         // manually close the keyboard before popping the fragment
         val view: View? = activity?.currentFocus
         if (view != null) {
-            val inputMethodManager = context?.getSystemService<InputMethodManager>()
+            val inputMethodManager = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager?
             inputMethodManager?.hideSoftInputFromWindow(view.windowToken, 0)
         }
         childFragmentManager.popBackStackImmediate(BOTTOM_SHEET, POP_BACK_STACK_INCLUSIVE)
@@ -706,11 +712,11 @@ class MainFragment : Fragment(R.layout.fragment_main),
     private fun showInBottomSheet(f: Fragment) {
         val appearAnim = if (bottomSheetFragment == null) R.animator.quest_answer_form_appear else 0
         val disappearAnim = R.animator.quest_answer_form_disappear
-        childFragmentManager.commit {
-            setCustomAnimations(appearAnim, disappearAnim, appearAnim, disappearAnim)
-            replace(R.id.map_bottom_sheet_container, f, BOTTOM_SHEET)
-            addToBackStack(BOTTOM_SHEET)
-        }
+        val ft: FragmentTransaction = childFragmentManager.beginTransaction()
+        ft.setCustomAnimations(appearAnim, disappearAnim, appearAnim, disappearAnim)
+        ft.replace(R.id.map_bottom_sheet_container, f, BOTTOM_SHEET)
+        ft.addToBackStack(BOTTOM_SHEET)
+        ft.commit()
     }
 
     private fun closeQuestDetailsFor(questId: Long, group: QuestGroup) {

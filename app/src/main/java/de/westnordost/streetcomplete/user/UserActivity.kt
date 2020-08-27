@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.commit
 import de.westnordost.streetcomplete.FragmentContainerActivity
 import de.westnordost.streetcomplete.Injector
 import de.westnordost.streetcomplete.R
@@ -118,13 +117,13 @@ class UserActivity : FragmentContainerActivity(R.layout.activity_user),
 
     private fun replaceMainFragment(fragment: Fragment) {
         supportFragmentManager.popBackStack("main", FragmentManager.POP_BACK_STACK_INCLUSIVE)
-        supportFragmentManager.commit {
-            setCustomAnimations(
+        supportFragmentManager.beginTransaction()
+            .setCustomAnimations(
                 R.anim.fade_in_from_bottom, R.anim.fade_out_to_top,
                 R.anim.fade_in_from_bottom, R.anim.fade_out_to_top
             )
-            replace(R.id.fragment_container, fragment)
-        }
+            .replace(R.id.fragment_container, fragment)
+            .commit()
     }
 
     companion object {

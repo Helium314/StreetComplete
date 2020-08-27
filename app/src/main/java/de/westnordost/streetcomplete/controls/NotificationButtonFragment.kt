@@ -2,8 +2,6 @@ package de.westnordost.streetcomplete.controls
 
 import android.os.Bundle
 import android.view.View
-import androidx.core.view.isGone
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import de.westnordost.streetcomplete.Injector
 import de.westnordost.streetcomplete.R
@@ -33,9 +31,10 @@ class NotificationButtonFragment : Fragment(R.layout.fragment_notification_butto
         override fun onNumberOfNotificationsUpdated(numberOfNotifications: Int) {
             launch(Dispatchers.Main) {
                 notificationButton.notificationsCount = numberOfNotifications
-                if (notificationButton.isVisible && numberOfNotifications == 0) {
+                val isVisible = notificationButton.visibility == View.VISIBLE
+                if (isVisible && numberOfNotifications == 0) {
                     notificationButton.popOut()
-                } else if(!notificationButton.isVisible && numberOfNotifications > 0) {
+                } else if(!isVisible && numberOfNotifications > 0) {
                     notificationButton.popIn()
                 }
             }
@@ -60,7 +59,7 @@ class NotificationButtonFragment : Fragment(R.layout.fragment_notification_butto
         super.onStart()
         val numberOfNotifications = notificationsSource.getNumberOfNotifications()
         notificationButton.notificationsCount = numberOfNotifications
-        notificationButton.isGone = numberOfNotifications <= 0
+        notificationButton.visibility = if (numberOfNotifications > 0) View.VISIBLE else View.GONE
         notificationsSource.addListener(notificationsSourceUpdateListener)
     }
 

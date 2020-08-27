@@ -8,7 +8,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE
-import androidx.fragment.app.commit
 
 /** An activity that contains one full-screen ("main") fragment */
 open class FragmentContainerActivity(
@@ -20,7 +19,7 @@ open class FragmentContainerActivity(
         set(value) {
             supportFragmentManager.popBackStack("main", POP_BACK_STACK_INCLUSIVE)
             if (value != null) {
-                supportFragmentManager.commit { replace(R.id.fragment_container, value) }
+                supportFragmentManager.beginTransaction().replace(R.id.fragment_container, value).commit()
             }
         }
 
@@ -35,14 +34,14 @@ open class FragmentContainerActivity(
     }
 
     fun pushMainFragment(fragment: Fragment) {
-        supportFragmentManager.commit {
-            setCustomAnimations(
-                R.anim.enter_from_right, R.anim.exit_to_left,
-                R.anim.enter_from_left, R.anim.exit_to_right
-            )
-            replace(R.id.fragment_container, fragment)
-            addToBackStack("main")
-        }
+        val tr = supportFragmentManager.beginTransaction()
+        tr.setCustomAnimations(
+            R.anim.enter_from_right, R.anim.exit_to_left,
+            R.anim.enter_from_left, R.anim.exit_to_right
+        )
+        tr.replace(R.id.fragment_container, fragment)
+        tr.addToBackStack("main")
+        tr.commit()
     }
 
     override fun onAttachFragment(fragment: Fragment) {

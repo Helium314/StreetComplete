@@ -1,11 +1,9 @@
 package de.westnordost.streetcomplete.user
 
 import android.os.Bundle
-import android.view.View
-import androidx.core.view.isGone
+import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction.TRANSIT_FRAGMENT_FADE
-import androidx.fragment.app.commit
 import de.westnordost.streetcomplete.Injector
 import de.westnordost.streetcomplete.R
 import de.westnordost.streetcomplete.data.quest.QuestType
@@ -35,12 +33,12 @@ class QuestStatisticsFragment : Fragment(R.layout.fragment_quest_statistics),
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        emptyText.isGone = questStatisticsDao.getTotalAmount() != 0
+        emptyText.visibility = if (questStatisticsDao.getTotalAmount() == 0) View.VISIBLE else View.GONE
 
         byQuestTypeButton.setOnClickListener { v -> selectorButton.check(v.id) }
         byCountryButton.setOnClickListener { v -> selectorButton.check(v.id) }
 
-        selectorButton.addOnButtonCheckedListener { _, checkedId, isChecked ->
+        selectorButton.addOnButtonCheckedListener { group, checkedId, isChecked ->
             if (isChecked) {
                 when (checkedId) {
                     R.id.byQuestTypeButton -> replaceFragment(QuestStatisticsByQuestTypeFragment())
@@ -61,10 +59,10 @@ class QuestStatisticsFragment : Fragment(R.layout.fragment_quest_statistics),
     }
 
     private fun replaceFragment(fragment: Fragment) {
-        childFragmentManager.commit {
-            setTransition(TRANSIT_FRAGMENT_FADE)
-            replace(R.id.questStatisticsFragmentContainer, fragment)
-        }
+        childFragmentManager.beginTransaction()
+            .setTransition(TRANSIT_FRAGMENT_FADE)
+            .replace(R.id.questStatisticsFragmentContainer, fragment)
+            .commit()
     }
 
     override fun onClickedQuestType(questType: QuestType<*>, solvedCount: Int, questBubbleView: View) {

@@ -4,11 +4,8 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.core.os.bundleOf
-import androidx.core.view.isGone
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE
-import androidx.fragment.app.commit
-import androidx.fragment.app.replace
 import de.westnordost.osmapi.user.Permission
 import de.westnordost.streetcomplete.BackPressedListener
 import de.westnordost.streetcomplete.HasTitle
@@ -61,7 +58,7 @@ class LoginFragment : Fragment(R.layout.fragment_login),
 
         val unsyncedChanges = unsyncedChangesCountSource.count
         unpublishedQuestsText.text = getString(R.string.unsynced_quests_not_logged_in_description, unsyncedChanges)
-        unpublishedQuestsText.isGone = unsyncedChanges <= 0
+        unpublishedQuestsText.visibility = if (unsyncedChanges > 0) View.VISIBLE else View.GONE
     }
 
     override fun onBackPressed(): Boolean {
@@ -114,14 +111,14 @@ class LoginFragment : Fragment(R.layout.fragment_login),
     /* ------------------------------------------------------------------------------------------ */
 
     private fun pushOAuthFragment() {
-        childFragmentManager.commit {
-            setCustomAnimations(
+        childFragmentManager.beginTransaction()
+            .setCustomAnimations(
                 R.anim.enter_from_right, R.anim.exit_to_left,
                 R.anim.enter_from_left, R.anim.exit_to_right
             )
-            replace<OAuthFragment>(R.id.oauthFragmentContainer)
-            addToBackStack("oauth")
-        }
+            .replace(R.id.oauthFragmentContainer, OAuthFragment())
+            .addToBackStack("oauth")
+            .commit()
     }
 
     companion object {

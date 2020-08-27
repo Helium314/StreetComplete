@@ -7,8 +7,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
-import androidx.fragment.app.add
-import androidx.fragment.app.commit
 
 import de.westnordost.streetcomplete.R
 import de.westnordost.streetcomplete.quests.note_discussion.AttachPhotoFragment
@@ -49,7 +47,9 @@ abstract class AbstractCreateNoteFragment : AbstractBottomSheetFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         if (savedInstanceState == null) {
-            childFragmentManager.commit { add<AttachPhotoFragment>(R.id.attachPhotoFragment) }
+            childFragmentManager.beginTransaction()
+                .add(R.id.attachPhotoFragment, AttachPhotoFragment())
+                .commit()
         }
 
         noteInput.addTextChangedListener(TextChangedWatcher { updateDoneButtonEnablement() })

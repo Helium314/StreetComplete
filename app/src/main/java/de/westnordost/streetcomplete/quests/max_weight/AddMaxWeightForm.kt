@@ -1,6 +1,7 @@
 package de.westnordost.streetcomplete.quests.max_weight
 
 import android.os.Bundle
+import androidx.appcompat.app.AlertDialog
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,15 +9,15 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.Spinner
-import androidx.appcompat.app.AlertDialog
-import androidx.core.view.isGone
+
 import de.westnordost.streetcomplete.R
 import de.westnordost.streetcomplete.ktx.allowOnlyNumbers
 import de.westnordost.streetcomplete.ktx.numberOrNull
 import de.westnordost.streetcomplete.quests.AbstractQuestFormAnswerFragment
 import de.westnordost.streetcomplete.quests.OtherAnswer
-import de.westnordost.streetcomplete.quests.max_weight.WeightMeasurementUnit.*
 import de.westnordost.streetcomplete.util.TextChangedWatcher
+
+import de.westnordost.streetcomplete.quests.max_weight.WeightMeasurementUnit.*
 
 class AddMaxWeightForm : AbstractQuestFormAnswerFragment<MaxWeightAnswer>() {
 
@@ -56,7 +57,7 @@ class AddMaxWeightForm : AbstractQuestFormAnswerFragment<MaxWeightAnswer>() {
         poundInputSign = contentView.findViewById(R.id.poundInputSign)
 
         weightUnitSelect = contentView.findViewById(R.id.weightUnitSelect)
-        weightUnitSelect?.isGone = weightLimitUnits.size == 1
+        weightUnitSelect?.visibility = if (weightLimitUnits.size == 1) View.GONE else View.VISIBLE
         weightUnitSelect?.adapter = ArrayAdapter(requireContext(), R.layout.spinner_item_centered, weightLimitUnits)
         weightUnitSelect?.setSelection(0)
         weightUnitSelect?.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -74,8 +75,8 @@ class AddMaxWeightForm : AbstractQuestFormAnswerFragment<MaxWeightAnswer>() {
         val isTon = unit == TON || unit == SHORT_TON
         val isPound = unit == POUND
 
-        tonInputSign?.isGone = !isTon
-        poundInputSign?.isGone = !isPound
+        tonInputSign?.visibility = if (isTon) View.VISIBLE else View.GONE
+        poundInputSign?.visibility = if (isPound) View.VISIBLE else View.GONE
 
         if (isTon) tonInput?.requestFocus()
         if (isPound) poundInput?.requestFocus()

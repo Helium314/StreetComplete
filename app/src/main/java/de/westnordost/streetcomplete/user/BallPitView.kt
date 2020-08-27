@@ -16,7 +16,6 @@ import android.view.Surface
 import android.view.View
 import android.view.animation.DecelerateInterpolator
 import android.widget.FrameLayout
-import androidx.core.content.getSystemService
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
@@ -89,7 +88,7 @@ class BallPitView @JvmOverloads constructor(
         bubbleBodyDef.type = BodyType.DYNAMIC
         bubbleBodyDef.fixedRotation = false
 
-        sensorManager = context.getSystemService<SensorManager>()!!
+        sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
     }
 
