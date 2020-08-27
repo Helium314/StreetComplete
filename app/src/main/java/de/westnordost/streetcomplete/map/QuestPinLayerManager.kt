@@ -132,7 +132,7 @@ class QuestPinLayerManager @Inject constructor(
                 "importance" to getQuestImportance(quest).toString(),
                 MARKER_QUEST_GROUP to group.name,
                 MARKER_QUEST_ID to quest.id!!.toString(),
-                "poi" to isPoi(quest)
+                "poi" to quest.type.dotColor
             )
             Point(position.toLngLat(), properties)
         }
@@ -142,18 +142,6 @@ class QuestPinLayerManager @Inject constructor(
         }
     }
 
-    private fun isPoi(quest: Quest): String {
-        return when(quest.type) {
-            is ShowBikeParking -> "violet"
-            is ShowBench -> "chocolate"
-            is ShowBusiness -> "orange"
-            is ShowWasteBasket -> "lightgreen"
-            is ShowRecycling -> "green"
-            is ShowTelephone -> "yellow"
-            else -> "no"
-        };
-    }
-    
     private fun remove(questId: Long, group: QuestGroup) {
         quests[group]?.remove(questId)
     }
