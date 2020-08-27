@@ -10,7 +10,8 @@ class ShowRecycling(o: OverpassMapDataAndGeometryApi) : SimpleOverpassQuestType<
     override val tagFilters = "nodes, ways with amenity = recycling"
     override val commitMessage = "I hope this does not get committed"
     override val wikiLink = "nope"
-    override val icon = R.drawable.ic_quest_recycling // replace later, but need own icon...
+    override val icon = R.drawable.ic_quest_recycling
+    override val dotColor = "green"
 
     override fun getTitle(tags: Map<String, String>) =
         R.string.quest_thisIsRecycling_title
