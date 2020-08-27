@@ -876,9 +876,14 @@ Otherwise, you can download another keyboard in the app store. Popular keyboards
     <string name="at_housenumber">house number %s:</string>
     <string name="quest_thisIsBikeParking_title">Show POI: Bicycle Parking</string>
     <string name="quest_thisIsBench_title">Show POI: Bench</string>
+    <string name="quest_thisIsPicnic_title">Show POI: Picnic Table</string>
     <string name="quest_thisIsTelephone_title">Show POI: Telephone</string>
     <string name="quest_thisIsRecycling_title">Show POI: Recycling</string>
     <string name="quest_thisIsWasteBasket_title">Show POI: Waste Basket</string>
-    <string name="quest_thisIsBusiness_name_title">Show POI: %1$s (%2$s)</string>
+    <string name="quest_thisIsBusiness_name_title">Show POI: %2$s (%1$s)</string>
     <string name="quest_thisIsBusiness_no_name_title">Show POI: %s</string>
+    <string name="quest_thisIsAtm_title">Show POI: ATM</string>
+    <string name="quest_thisIsCharging_title">Show POI: Charging Station</string>
+    <string name="quest_thisIsVendingMachine_title">Show POI: Vending Machine: %s</string>
+    <string name="quest_thisIsVacant_title">Show POI: Vacant Place</string>
 </resources>
