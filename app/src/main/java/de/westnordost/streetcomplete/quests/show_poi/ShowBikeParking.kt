@@ -11,6 +11,7 @@ class ShowBikeParking(o: OverpassMapDataAndGeometryApi) : SimpleOverpassQuestTyp
     override val commitMessage = "I hope this does not get committed"
     override val wikiLink = "nope"
     override val icon = R.drawable.ic_quest_bicycle_parking_cover // replace later, but need own icon...
+    override val dotColor = "violet"
 
     override fun getTitle(tags: Map<String, String>) =
         R.string.quest_thisIsBikeParking_title
