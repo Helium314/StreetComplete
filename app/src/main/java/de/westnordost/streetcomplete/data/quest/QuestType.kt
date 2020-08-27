@@ -14,6 +14,9 @@ interface QuestType<T> {
      * if it is not disabled by default */
     val defaultDisabledMessage: Int get() = 0
 
+    // add color, only use/override for poi dots
+    val dotColor: String get() = "no"
+
     /** returns the dialog in which the user can add the data */
     fun createForm(): AbstractQuestAnswerFragment<T>
 }
