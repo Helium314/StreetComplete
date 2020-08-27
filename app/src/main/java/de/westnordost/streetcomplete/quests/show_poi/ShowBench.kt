@@ -8,13 +8,20 @@ import de.westnordost.streetcomplete.data.osm.mapdata.OverpassMapDataAndGeometry
 import de.westnordost.streetcomplete.quests.NoAnswerFragment
 
 class ShowBench(o: OverpassMapDataAndGeometryApi) : SimpleOverpassQuestType<Boolean>(o) {
-    override val tagFilters = "nodes with amenity = bench"
+    override val tagFilters = """
+        nodes with amenity = bench
+        or leisure = picnic_table
+    """
     override val commitMessage = "I hope this does not get committed"
     override val wikiLink = "nope"
     override val icon = R.drawable.ic_quest_bench // replace later, but need own icon...
+    override val dotColor = "chocolate"
 
     override fun getTitle(tags: Map<String, String>) =
-        R.string.quest_thisIsBench_title
+        if (tags.containsKey("leisure"))
+            R.string.quest_thisIsPicnic_title
+        else
+            R.string.quest_thisIsBench_title
 
     override fun createForm() = NoAnswerFragment()
 
