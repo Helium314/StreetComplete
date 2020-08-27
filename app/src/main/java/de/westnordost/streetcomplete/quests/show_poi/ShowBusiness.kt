@@ -13,9 +13,10 @@ class ShowBusiness(o: OverpassMapDataAndGeometryApi) : SimpleOverpassQuestType<B
         nodes, ways, relations with
         (
          shop and shop !~ no|vacant
-         or amenity = bicycle_parking and bicycle_parking = building
+         or craft
+         or office
+         or information = board
          or amenity = parking and parking = multi-storey
-         or amenity = recycling and recycling_type = centre
          or tourism = information and information = office
          or """.trimIndent() +
 
@@ -40,7 +41,17 @@ class ShowBusiness(o: OverpassMapDataAndGeometryApi) : SimpleOverpassQuestType<B
                 "police", "ranger_station",            // civic
                 "ferry_terminal",                      // transport
                 "place_of_worship",                    // religious
-                "hospital"                             // health care
+                "hospital",                            // health care
+                "toilets",
+                // name only
+                "studio",                                                                // culture
+                "events_venue", "exhibition_centre", "music_venue",                      // events
+                "prison", "fire_station",                                                // civic
+                "social_facility", "nursing_home", "childcare", "retirement_home", "social_centre", // social
+                "monastery",                                                             // religious
+                "kindergarten", "school", "college", "university", "research_institute", // education
+                "driving_school", "dive_centre", "language_school", "music_school",      // learning
+                "brothel", "gambling", "love_hotel", "stripclub"                         // bad stuff
             ),
             "tourism" to arrayOf(
                 // common
@@ -58,27 +69,19 @@ class ShowBusiness(o: OverpassMapDataAndGeometryApi) : SimpleOverpassQuestType<B
             "leisure" to arrayOf(
                 // common
                 "fitness_centre", "golf_course", "water_park", "miniature_golf", "bowling_alley",
-                "amusement_arcade", "adult_gaming_centre", "tanning_salon",
+                "amusement_arcade", "adult_gaming_centre", "tanning_salon","escape_game",
+                "sauna","trampoline_park",
 
                 // name & wheelchair
                 "sports_centre", "stadium", "marina",
 
-                "horse_riding"
+                "horse_riding", "dance", "nature_reserve","pitch","playground"
             ),
-            "office" to arrayOf(
-                // common
-                "insurance", "government", "travel_agent", "tax_advisor", "religion", "employment_agency",
-
-                // name & wheelchair
-                "lawyer", "estate_agent", "political_party", "therapist"
+            "landuse" to arrayOf(
+                "cemetery", "allotments"
             ),
-            "craft" to arrayOf(
-                // common
-                "carpenter", "shoemaker", "tailor", "photographer", "dressmaker",
-                "electronics_repair", "key_cutter", "stonemason",
-
-                // name & wheelchair
-                "winery"
+            "military" to arrayOf(
+                "airfield", "barracks", "training_area"
             )
         ).map { it.key + " ~ " + it.value.joinToString("|") }.joinToString("\n or ") +
         "\n)"
@@ -86,6 +89,7 @@ class ShowBusiness(o: OverpassMapDataAndGeometryApi) : SimpleOverpassQuestType<B
     override val commitMessage = "I hope this does not get committed"
     override val wikiLink = "nope"
     override val icon = R.drawable.ic_quest_opening_hours
+    override val dotColor = "orange"
 
     override fun getTitle(tags: Map<String, String>) =
         if (hasProperName(tags))
@@ -98,7 +102,8 @@ class ShowBusiness(o: OverpassMapDataAndGeometryApi) : SimpleOverpassQuestType<B
 
     override fun getTitleArgs(tags: Map<String, String>, featureName: Lazy<String?>): Array<String> {
         val name = tags["name"] ?: tags["brand"] ?: featureName.value
-        return if (name != null) arrayOf(name,featureName.value.toString()) else arrayOf()
+        val name2 = featureName.value ?: tags.entries
+        return if (name != null) arrayOf(name2.toString(),name) else arrayOf()
     }
 
     override fun createForm() = NoAnswerFragment()
