@@ -14,7 +14,9 @@ import de.westnordost.osmapi.map.data.OsmLatLon
 import de.westnordost.streetcomplete.Prefs
 import de.westnordost.streetcomplete.data.download.*
 import de.westnordost.streetcomplete.data.upload.UploadController
+import de.westnordost.streetcomplete.data.user.LoginStatusSource
 import de.westnordost.streetcomplete.data.user.UserController
+import de.westnordost.streetcomplete.data.user.UserLoginStatusListener
 import de.westnordost.streetcomplete.location.FineLocationManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -33,24 +35,17 @@ import javax.inject.Singleton
     private val mobileDataDownloadStrategy: MobileDataAutoDownloadStrategy,
     private val wifiDownloadStrategy: WifiAutoDownloadStrategy,
     private val context: Context,
-    private val visibleQuestsSource: VisibleQuestsSource,
     private val unsyncedChangesCountSource: UnsyncedChangesCountSource,
-    private val downloadProgressSource: QuestDownloadProgressSource,
+    private val downloadProgressSource: DownloadProgressSource,
+    private val loginStatusSource: LoginStatusSource,
     private val prefs: SharedPreferences,
-    private val userController: UserController
+    private val userController: UserController,
 ) : LifecycleObserver, CoroutineScope by CoroutineScope(Dispatchers.Default) {
 
     private var pos: LatLon? = null
 
     private var isConnected: Boolean = false
     private var isWifi: Boolean = false
-
-    // amount of visible quests is reduced -> check if re-downloading makes sense now
-    private val visibleQuestListener = object : VisibleQuestListener {
-        override fun onUpdatedVisibleQuests(added: Collection<Quest>, removed: Collection<Long>, group: QuestGroup) {
-            if (removed.isNotEmpty()) { triggerAutoDownload() }
-        }
-    }
 
     // new location is known -> check if downloading makes sense now
     private val locationManager = FineLocationManager(context.getSystemService<LocationManager>()!!) { location ->
@@ -78,10 +73,18 @@ import javax.inject.Singleton
     }
 
     // on download finished, should recheck conditions for download
-    private val downloadProgressListener = object : QuestDownloadProgressListener {
+    private val downloadProgressListener = object : DownloadProgressListener {
         override fun onSuccess() {
             triggerAutoDownload()
         }
+    }
+
+    private val userLoginStatusListener = object : UserLoginStatusListener {
+        override fun onLoggedIn() {
+            triggerAutoUpload()
+        }
+
+        override fun onLoggedOut() {}
     }
 
     val isAllowedByPreference: Boolean
@@ -93,9 +96,9 @@ import javax.inject.Singleton
     /* ---------------------------------------- Lifecycle --------------------------------------- */
 
     init {
-        visibleQuestsSource.addListener(visibleQuestListener)
         unsyncedChangesCountSource.addListener(unsyncedChangesListener)
-        downloadProgressSource.addQuestDownloadProgressListener(downloadProgressListener)
+        downloadProgressSource.addDownloadProgressListener(downloadProgressListener)
+        loginStatusSource.addLoginStatusListener(userLoginStatusListener)
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME) fun onResume() {
@@ -113,9 +116,9 @@ import javax.inject.Singleton
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY) fun onDestroy() {
-        visibleQuestsSource.removeListener(visibleQuestListener)
         unsyncedChangesCountSource.removeListener(unsyncedChangesListener)
-        downloadProgressSource.removeQuestDownloadProgressListener(downloadProgressListener)
+        downloadProgressSource.removeDownloadProgressListener(downloadProgressListener)
+        loginStatusSource.removeLoginStatusListener(userLoginStatusListener)
         coroutineContext.cancel()
     }
 
@@ -131,7 +134,6 @@ import javax.inject.Singleton
     /* ------------------------------------------------------------------------------------------ */
 
     fun triggerAutoDownload() {
-        if (!isAllowedByPreference) return
         val pos = pos ?: return
         if (!isConnected) return
         if (questDownloadController.isDownloadInProgress) return
@@ -140,12 +142,10 @@ import javax.inject.Singleton
 
         launch {
             val downloadStrategy = if (isWifi) wifiDownloadStrategy else mobileDataDownloadStrategy
-            if (downloadStrategy.mayDownloadHere(pos)) {
+            val downloadBoundingBox = downloadStrategy.getDownloadBoundingBox(pos)
+            if (downloadBoundingBox != null) {
                 try {
-                    questDownloadController.download(
-                        downloadStrategy.getDownloadBoundingBox(pos),
-                        downloadStrategy.questTypeDownloadCount
-                    )
+                    questDownloadController.download(downloadBoundingBox)
                 } catch (e: IllegalStateException) {
                     // The Android 9 bug described here should not result in a hard crash of the app
                     // https://stackoverflow.com/questions/52013545/android-9-0-not-allowed-to-start-service-app-is-in-background-after-onresume

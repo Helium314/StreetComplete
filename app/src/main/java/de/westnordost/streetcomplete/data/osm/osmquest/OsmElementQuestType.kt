@@ -1,11 +1,10 @@
 package de.westnordost.streetcomplete.data.osm.osmquest
 
-import de.westnordost.osmapi.map.data.BoundingBox
+import de.westnordost.osmapi.map.MapDataWithGeometry
 import de.westnordost.osmapi.map.data.Element
 import de.westnordost.streetcomplete.data.quest.QuestType
 import de.westnordost.streetcomplete.data.quest.AllCountries
 import de.westnordost.streetcomplete.data.quest.Countries
-import de.westnordost.streetcomplete.data.osm.elementgeometry.ElementGeometry
 import de.westnordost.streetcomplete.data.osm.changes.StringMapChangesBuilder
 
 /** Quest type where each quest refers to an OSM element */
@@ -19,7 +18,8 @@ interface OsmElementQuestType<T> : QuestType<T> {
     /** the commit message to be used for this quest type */
     val commitMessage: String
 
-    val wikiLink: String? get() = null
+    val wikiLink: String?
+
 
     // the below could also go up into QuestType interface, but then they should be accounted for
     // in the respective download/upload classes as well
@@ -33,19 +33,20 @@ interface OsmElementQuestType<T> : QuestType<T> {
     /** returns whether the user should be able to split the way instead */
     val isSplitWayEnabled: Boolean get() = false
 
+    /** whether quests of this type should be added for all segments of a way that has been split */
+    val isRecreateAfterSplitEnabled: Boolean get() = true
+
     /** returns title resource for when the element has the specified [tags]. The tags are unmodifiable */
     fun getTitle(tags: Map<String, String>): Int
 
     override val title: Int get() = getTitle(emptyMap())
 
-    /** Downloads map data for this quest type for the given [bbox] and puts the received data into
-     *  the [handler]. Returns whether the download was successful
-     */
-    fun download(bbox: BoundingBox, handler: (element: Element, geometry: ElementGeometry?) -> Unit): Boolean
+    /** return all elements within the given map data that are applicable to this quest type. */
+    fun getApplicableElements(mapData: MapDataWithGeometry): Iterable<Element>
 
     /** returns whether a quest of this quest type could be created out of the given [element]. If the
-     * element alone does not suffice to find this out (but e.g. an Overpass query would need to be
-     * made to find this out), this should return null.
+     * element alone does not suffice to find this out (but f.e. is determined by the data around
+     * it), this should return null.
      *
      * The implications of returning null here is that this quest will never be created directly
      * as consequence of solving another quest and also after reverting an input, the quest will
@@ -56,6 +57,7 @@ interface OsmElementQuestType<T> : QuestType<T> {
      *  instead, a map of [changes] is built */
     fun applyAnswerTo(answer: T, changes: StringMapChangesBuilder)
 
+    @Suppress("UNCHECKED_CAST")
     fun applyAnswerToUnsafe(answer: Any, changes: StringMapChangesBuilder) {
         applyAnswerTo(answer as T, changes)
     }

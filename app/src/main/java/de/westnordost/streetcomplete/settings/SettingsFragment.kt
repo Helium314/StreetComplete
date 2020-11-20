@@ -3,6 +3,7 @@ package de.westnordost.streetcomplete.settings
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
@@ -19,7 +20,6 @@ import de.westnordost.streetcomplete.data.osm.osmquest.OsmQuestController
 import de.westnordost.streetcomplete.data.osmnotes.notequests.OsmNoteQuest
 import de.westnordost.streetcomplete.data.osmnotes.notequests.OsmNoteQuestController
 import de.westnordost.streetcomplete.data.visiblequests.QuestTypeOrderList
-import de.westnordost.streetcomplete.data.user.UserController
 import de.westnordost.streetcomplete.ktx.toast
 import kotlinx.coroutines.*
 import javax.inject.Inject
@@ -30,10 +30,10 @@ class SettingsFragment : PreferenceFragmentCompat(),
     CoroutineScope by CoroutineScope(Dispatchers.Main) {
 
     @Inject internal lateinit var prefs: SharedPreferences
-    @Inject internal lateinit var userController: UserController
     @Inject internal lateinit var downloadedTilesDao: DownloadedTilesDao
     @Inject internal lateinit var osmQuestController: OsmQuestController
     @Inject internal lateinit var osmNoteQuestController: OsmNoteQuestController
+    @Inject internal lateinit var resurveyIntervalsUpdater: ResurveyIntervalsUpdater
     @Inject internal lateinit var questTypeOrderList: QuestTypeOrderList
 
     interface Listener {
@@ -113,13 +113,11 @@ class SettingsFragment : PreferenceFragmentCompat(),
             }
             Prefs.AUTOSYNC -> {
                 if (Prefs.Autosync.valueOf(prefs.getString(Prefs.AUTOSYNC, "ON")!!) != Prefs.Autosync.ON) {
-                    context?.let {
-                        AlertDialog.Builder(it)
-                            .setView(R.layout.dialog_tutorial_upload)
-                            .setPositiveButton(android.R.string.ok, null)
-                            .show()
-                    }
-
+                    val view = LayoutInflater.from(activity).inflate(R.layout.dialog_tutorial_upload, null)
+                    AlertDialog.Builder(requireContext())
+                        .setView(view)
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show()
                 }
             }
             Prefs.THEME_SELECT -> {
@@ -127,8 +125,11 @@ class SettingsFragment : PreferenceFragmentCompat(),
                 AppCompatDelegate.setDefaultNightMode(theme.appCompatNightMode)
                 activity?.recreate()
             }
-            Prefs.QUEST_PRESET -> {
+            Prefs.QUEST_PROFILE -> {
                 questTypeOrderList.reload()
+            }
+            Prefs.RESURVEY_INTERVALS -> {
+                resurveyIntervalsUpdater.update()
             }
         }
     }

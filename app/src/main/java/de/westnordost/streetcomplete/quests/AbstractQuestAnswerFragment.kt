@@ -10,7 +10,6 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.Button
 import android.widget.PopupMenu
 import androidx.annotation.AnyThread
@@ -27,6 +26,7 @@ import de.westnordost.streetcomplete.R
 import de.westnordost.streetcomplete.data.meta.CountryInfo
 import de.westnordost.streetcomplete.data.meta.CountryInfos
 import de.westnordost.streetcomplete.data.osm.elementgeometry.ElementGeometry
+import de.westnordost.streetcomplete.data.osm.osmquest.OsmElementQuestType
 import de.westnordost.streetcomplete.data.quest.Quest
 import de.westnordost.streetcomplete.data.quest.QuestGroup
 import de.westnordost.streetcomplete.data.quest.QuestType
@@ -89,6 +89,7 @@ abstract class AbstractQuestAnswerFragment<T> : AbstractBottomSheetFragment(), I
     open val buttonsResId: Int? = null
     open val otherAnswers = listOf<OtherAnswer>()
     open val contentPadding = true
+    open val defaultExpanded = true
 
     interface Listener {
         /** Called when the user answered the quest with the given id. What is in the bundle, is up to
@@ -136,7 +137,6 @@ abstract class AbstractQuestAnswerFragment<T> : AbstractBottomSheetFragment(), I
 
         contentLayoutResId?.let { setContentView(it) }
         buttonsResId?.let { setButtonsView(it) }
-        if(!contentPadding) content.setPadding(0,0,0,0)
         return view
     }
 
@@ -156,27 +156,7 @@ abstract class AbstractQuestAnswerFragment<T> : AbstractBottomSheetFragment(), I
             content.visibility = View.GONE
         }
 
-        val answers = assembleOtherAnswers()
-        if (answers.size == 1) {
-            otherAnswersButton.setText(answers.first().titleResourceId)
-            otherAnswersButton.setOnClickListener { answers.first().action() }
-        } else {
-            otherAnswersButton.setText(R.string.quest_generic_otherAnswers)
-            otherAnswersButton.setOnClickListener {
-                val popup = PopupMenu(requireContext(), otherAnswersButton)
-                for (i in answers.indices) {
-                    val otherAnswer = answers[i]
-                    val order = answers.size - i
-                    popup.menu.add(Menu.NONE, i, order, otherAnswer.titleResourceId)
-                }
-                popup.show()
-
-                popup.setOnMenuItemClickListener { item ->
-                    answers[item.itemId].action()
-                    true
-                }
-            }
-        }
+        if (defaultExpanded) expand()
     }
 
     private fun assembleOtherAnswers() : List<OtherAnswer> {
@@ -185,23 +165,42 @@ abstract class AbstractQuestAnswerFragment<T> : AbstractBottomSheetFragment(), I
         val cantSay = OtherAnswer(R.string.quest_generic_answer_notApplicable) { onClickCantSay() }
         answers.add(cantSay)
 
-        val way = osmElement as? Way
-        if (way != null) {
-            /* splitting up a closed roundabout can be very complex if it is part of a route
+        val isSplitWayEnabled = (questType as? OsmElementQuestType)?.isSplitWayEnabled == true
+        if (isSplitWayEnabled) {
+            val way = osmElement as? Way
+            if (way != null) {
+                /* splitting up a closed roundabout can be very complex if it is part of a route
                relation, so it is not supported
                https://wiki.openstreetmap.org/wiki/Relation:route#Bus_routes_and_roundabouts
             */
-            val isClosedRoundabout = way.nodeIds.firstOrNull() == way.nodeIds.lastOrNull() &&
+                val isClosedRoundabout = way.nodeIds.firstOrNull() == way.nodeIds.lastOrNull() &&
                     way.tags?.get("junction") == "roundabout"
-            if (!isClosedRoundabout && !way.isArea()) {
-                val splitWay = OtherAnswer(R.string.quest_generic_answer_differs_along_the_way) {
-                    onClickSplitWayAnswer()
+                if (!isClosedRoundabout && !way.isArea()) {
+                    val splitWay = OtherAnswer(R.string.quest_generic_answer_differs_along_the_way) {
+                        onClickSplitWayAnswer()
+                    }
+                    answers.add(splitWay)
                 }
-                answers.add(splitWay)
             }
         }
         answers.addAll(otherAnswers)
         return answers
+    }
+
+    private fun showOtherAnswers() {
+        val answers = assembleOtherAnswers()
+        val popup = PopupMenu(requireContext(), otherAnswersButton)
+        for (i in answers.indices) {
+            val otherAnswer = answers[i]
+            val order = answers.size - i
+            popup.menu.add(Menu.NONE, i, order, otherAnswer.titleResourceId)
+        }
+        popup.show()
+
+        popup.setOnMenuItemClickListener { item ->
+            answers[item.itemId].action()
+            true
+        }
     }
 
     private fun getLocationLabelText(): CharSequence? {
@@ -256,6 +255,15 @@ abstract class AbstractQuestAnswerFragment<T> : AbstractBottomSheetFragment(), I
         if(!startedOnce) {
             onMapOrientation(initialMapRotation, initialMapTilt)
             startedOnce = true
+        }
+
+        val answers = assembleOtherAnswers()
+        if (answers.size == 1) {
+            otherAnswersButton.setText(answers.first().titleResourceId)
+            otherAnswersButton.setOnClickListener { answers.first().action() }
+        } else {
+            otherAnswersButton.setText(R.string.quest_generic_otherAnswers)
+            otherAnswersButton.setOnClickListener { showOtherAnswers() }
         }
     }
 
@@ -326,15 +334,21 @@ abstract class AbstractQuestAnswerFragment<T> : AbstractBottomSheetFragment(), I
             content.removeAllViews()
         }
         content.visibility = View.VISIBLE
+        updateContentPadding()
         return layoutInflater.inflate(resourceId, content)
     }
 
-    protected fun setNoContentPadding() {
-        content.setPadding(0, 0, 0, 0)
+    private fun updateContentPadding() {
+        if(!contentPadding) {
+            content.setPadding(0,0,0,0)
+        } else {
+            val horizontal = resources.getDimensionPixelSize(R.dimen.quest_form_horizontal_padding)
+            val vertical = resources.getDimensionPixelSize(R.dimen.quest_form_vertical_padding)
+            content.setPadding(horizontal, vertical, horizontal, vertical)
+        }
     }
 
     protected fun setButtonsView(resourceId: Int) {
-        otherAnswersButton.layoutParams = FlexboxLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT)
         removeButtonsView()
         activity?.layoutInflater?.inflate(resourceId, buttonPanel)
     }

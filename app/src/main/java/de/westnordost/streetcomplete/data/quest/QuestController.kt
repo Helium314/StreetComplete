@@ -151,7 +151,7 @@ import javax.inject.Singleton
 
     private fun createOsmQuestChanges(quest: OsmQuest, element: Element, answer: Any) : StringMapChanges? {
         return try {
-            val changesBuilder = StringMapChangesBuilder(element.tags)
+            val changesBuilder = StringMapChangesBuilder(element.tags.orEmpty())
             quest.osmElementQuestType.applyAnswerToUnsafe(answer, changesBuilder)
             changesBuilder.create()
         } catch (e: IllegalArgumentException) {
@@ -180,17 +180,6 @@ import javax.inject.Singleton
     fun get(questId: Long, group: QuestGroup): Quest? = when (group) {
         QuestGroup.OSM -> osmQuestController.get(questId)
         QuestGroup.OSM_NOTE -> osmNoteQuestController.get(questId)
-    }
-
-    /** Delete old unsolved quests as well as long already uploaded quests */
-    fun cleanUp() = launch(Dispatchers.IO) {
-        var deleted = osmQuestController.cleanUp()
-        deleted += osmNoteQuestController.cleanUp()
-
-        if (deleted > 0) {
-            Log.d(TAG, "Deleted $deleted old unsolved quests")
-            osmElementDB.deleteUnreferenced()
-        }
     }
 
     companion object {

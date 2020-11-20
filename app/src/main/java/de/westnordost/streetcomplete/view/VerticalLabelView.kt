@@ -37,25 +37,28 @@ class VerticalLabelView @JvmOverloads constructor(
     }
 
     fun setText(text: String?) {
+        if (this.text == text) return
         this.text = text
         requestLayout()
         invalidate()
     }
 
     fun setTextSize(size: Int) {
+        if (textPaint.textSize == size.toFloat()) return
         textPaint.textSize = size.toFloat()
         requestLayout()
         invalidate()
     }
 
     fun setTextColor(color: Int) {
+        if (textPaint.color == color) return
         textPaint.color = color
         invalidate()
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        text?.let {
-            textPaint.getTextBounds(it, 0, it.length ?: 0, textBounds)
+        text.let {
+            textPaint.getTextBounds(it.orEmpty(), 0, text?.length ?: 0, textBounds)
         }
 
         val desiredWidth = textBounds.height() + paddingLeft + paddingRight

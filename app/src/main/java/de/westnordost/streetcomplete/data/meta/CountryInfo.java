@@ -31,6 +31,36 @@ public class CountryInfo implements Serializable, Cloneable
 	Boolean isAdvisorySpeedLimitKnown;
 	Boolean isLeftHandTraffic;
 	Integer mobileCountryCode;
+	List<String> chargingStationOperators;
+	List<String> clothesContainerOperators;
+	List<String> atmOperators;
+	Boolean isUsuallyAnyGlassRecycleableInContainers;
+	Boolean isCenterLeftTurnLaneKnown;
+	String centerLine;
+	String shoulderLine;
+
+	public String getCenterLine() { return centerLine; }
+	public String getShoulderLine() { return shoulderLine; }
+
+	public Boolean isCenterLeftTurnLaneKnown() {
+		return isCenterLeftTurnLaneKnown;
+	}
+
+	public Boolean isUsuallyAnyGlassRecycleableInContainers() {
+		return isUsuallyAnyGlassRecycleableInContainers;
+	}
+
+	public List<String> getChargingStationOperators() {
+		return chargingStationOperators;
+	}
+
+	public List<String> getClothesContainerOperators() {
+		return clothesContainerOperators;
+	}
+
+	public List<String> getAtmOperators() {
+		return atmOperators;
+	}
 
 	public List<String> getLengthUnits()
 	{

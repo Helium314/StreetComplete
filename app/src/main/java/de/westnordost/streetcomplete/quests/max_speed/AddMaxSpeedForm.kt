@@ -3,12 +3,14 @@ package de.westnordost.streetcomplete.quests.max_speed
 import android.os.Bundle
 import android.view.View
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Spinner
 import androidx.annotation.IdRes
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.getSystemService
 import androidx.core.view.children
 import androidx.core.view.isGone
 import de.westnordost.streetcomplete.R
@@ -28,11 +30,6 @@ class AddMaxSpeedForm : AbstractQuestFormAnswerFragment<MaxSpeedAnswer>() {
 
     override val otherAnswers: List<OtherAnswer> get() {
         val result = mutableListOf<OtherAnswer>()
-
-        val highwayTag = osmElement!!.tags["highway"]!!
-        if (countryInfo.isLivingStreetKnown && MAYBE_LIVING_STREET.contains(highwayTag)) {
-            result.add(OtherAnswer(R.string.quest_maxspeed_answer_living_street) { confirmLivingStreet() })
-        }
         if (countryInfo.isAdvisorySpeedLimitKnown) {
             result.add(OtherAnswer(R.string.quest_maxspeed_answer_advisory_speed_limit) { switchToAdvisorySpeedLimit() })
         }
@@ -48,8 +45,13 @@ class AddMaxSpeedForm : AbstractQuestFormAnswerFragment<MaxSpeedAnswer>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val couldBeSlowZone = countryInfo.isSlowZoneKnown && POSSIBLY_SLOWZONE_ROADS.contains(osmElement!!.tags["highway"]!!)
+        val highwayTag = osmElement!!.tags["highway"]!!
+
+        val couldBeSlowZone = countryInfo.isSlowZoneKnown && POSSIBLY_SLOWZONE_ROADS.contains(highwayTag)
         zone.isGone = !couldBeSlowZone
+
+        val couldBeLivingStreet = countryInfo.isLivingStreetKnown && MAYBE_LIVING_STREET.contains(highwayTag)
+        living_street.isGone = !couldBeLivingStreet
 
         speedTypeSelect.setOnCheckedChangeListener { _, checkedId -> setSpeedType(getSpeedType(checkedId)) }
     }
@@ -63,6 +65,8 @@ class AddMaxSpeedForm : AbstractQuestFormAnswerFragment<MaxSpeedAnswer>() {
                 confirmNoSignSlowZone { determineImplicitMaxspeedType() }
             else
                 confirmNoSign { determineImplicitMaxspeedType() }
+        } else if (speedType == LIVING_STREET) {
+            applyAnswer(IsLivingStreet)
         } else {
             if (userSelectedUnusualSpeed())
                 confirmUnusualInput { applySpeedLimitFormAnswer() }
@@ -71,7 +75,8 @@ class AddMaxSpeedForm : AbstractQuestFormAnswerFragment<MaxSpeedAnswer>() {
         }
     }
 
-    override fun isFormComplete() = speedType == NO_SIGN || getSpeedFromInput() != null
+    override fun isFormComplete() =
+        speedType == NO_SIGN || speedType == LIVING_STREET || getSpeedFromInput() != null
 
     /* ---------------------------------------- With sign --------------------------------------- */
 
@@ -81,8 +86,13 @@ class AddMaxSpeedForm : AbstractQuestFormAnswerFragment<MaxSpeedAnswer>() {
         rightSideContainer.removeAllViews()
         speedType?.layoutResId?.let { layoutInflater.inflate(it, rightSideContainer, true) }
 
+        // this is necessary because the inflated image view uses the activity context rather than
+        // the fragment / layout inflater context' resources to access it's drawable
+        val img = rightSideContainer.findViewById<ImageView>(R.id.livingStreetImage)
+        img?.setImageDrawable(resources.getDrawable(R.drawable.ic_living_street))
+
         speedInput = rightSideContainer.findViewById(R.id.maxSpeedInput)
-        speedInput?.requestFocus()
+
         speedInput?.addTextChangedListener(TextChangedWatcher { checkIsFormComplete() })
 
         speedUnitSelect = rightSideContainer.findViewById(R.id.speedUnitSelect)
@@ -90,20 +100,29 @@ class AddMaxSpeedForm : AbstractQuestFormAnswerFragment<MaxSpeedAnswer>() {
         speedUnitSelect?.adapter = ArrayAdapter(requireContext(), R.layout.spinner_item_centered, speedUnits)
         speedUnitSelect?.setSelection(0)
 
+        if (speedType == ZONE && LAST_INPUT_SLOW_ZONE != null) {
+            speedInput?.setText(LAST_INPUT_SLOW_ZONE.toString())
+        } else {
+            speedInput?.requestFocus()
+            speedInput?.let { showKeyboard(it) }
+        }
+
         checkIsFormComplete()
     }
 
     private fun getSpeedType(@IdRes checkedId: Int) = when (checkedId) {
-        R.id.sign ->    SIGN
-        R.id.zone ->    ZONE
-        R.id.no_sign -> NO_SIGN
+        R.id.sign          -> SIGN
+        R.id.zone          -> ZONE
+        R.id.living_street -> LIVING_STREET
+        R.id.no_sign       -> NO_SIGN
         else -> null
     }
 
     private val SpeedType.layoutResId get() = when (this) {
-        SIGN ->     R.layout.quest_maxspeed_sign
-        ZONE ->     R.layout.quest_maxspeed_zone_sign
-        ADVISORY -> R.layout.quest_maxspeed_advisory
+        SIGN          -> R.layout.quest_maxspeed_sign
+        ZONE          -> R.layout.quest_maxspeed_zone_sign
+        LIVING_STREET -> R.layout.quest_maxspeed_living_street_sign
+        ADVISORY      -> R.layout.quest_maxspeed_advisory
         else -> null
     }
 
@@ -121,6 +140,11 @@ class AddMaxSpeedForm : AbstractQuestFormAnswerFragment<MaxSpeedAnswer>() {
         setSpeedType(ADVISORY)
     }
 
+    private fun showKeyboard(focus: View) {
+        val imm = activity?.getSystemService<InputMethodManager>()
+        imm?.showSoftInput(focus, InputMethodManager.SHOW_IMPLICIT)
+    }
+
     private fun confirmUnusualInput(onConfirmed: () -> Unit) {
         activity?.let { AlertDialog.Builder(it)
             .setTitle(R.string.quest_generic_confirmation_title)
@@ -134,10 +158,14 @@ class AddMaxSpeedForm : AbstractQuestFormAnswerFragment<MaxSpeedAnswer>() {
     private fun applySpeedLimitFormAnswer() {
         val speed = getSpeedFromInput()!!
         when (speedType) {
-            ADVISORY -> applyAnswer(AdvisorySpeedSign(speed))
-            ZONE ->     applyAnswer(MaxSpeedZone(speed, countryInfo.countryCode, "zone${speed.toValue()}"))
-            SIGN ->     applyAnswer(MaxSpeedSign(speed))
-            else ->     throw IllegalStateException()
+            ADVISORY      -> applyAnswer(AdvisorySpeedSign(speed))
+            ZONE          -> {
+                val zoneX = speed.toValue()
+                LAST_INPUT_SLOW_ZONE = zoneX
+                applyAnswer(MaxSpeedZone(speed, countryInfo.countryCode, "zone$zoneX"))
+            }
+            SIGN          -> applyAnswer(MaxSpeedSign(speed))
+            else          -> throw IllegalStateException()
         }
     }
 
@@ -151,23 +179,6 @@ class AddMaxSpeedForm : AbstractQuestFormAnswerFragment<MaxSpeedAnswer>() {
     }
 
     /* ----------------------------------------- No sign ---------------------------------------- */
-
-    // the living street answer stuff is copied to AddAccessibleForPedestriansForm
-    private fun confirmLivingStreet() {
-        activity?.let {
-            val view = layoutInflater.inflate(R.layout.quest_maxspeed_living_street_confirmation, null, false)
-            // this is necessary because the inflated image view uses the activity context rather than
-            // the fragment / layout inflater context' resources to access it's drawable
-            val img = view.findViewById<ImageView>(R.id.livingStreetImage)
-            img.setImageDrawable(resources.getDrawable(R.drawable.ic_living_street))
-            AlertDialog.Builder(it)
-                .setView(view)
-                .setTitle(R.string.quest_maxspeed_answer_living_street_confirmation_title)
-                .setPositiveButton(R.string.quest_generic_confirmation_yes) { _, _ -> applyAnswer(IsLivingStreet) }
-                .setNegativeButton(R.string.quest_generic_confirmation_no, null)
-                .show()
-        }
-    }
 
     private fun confirmNoSign(onConfirmed: () -> Unit) {
         activity?.let {
@@ -266,9 +277,11 @@ class AddMaxSpeedForm : AbstractQuestFormAnswerFragment<MaxSpeedAnswer>() {
         private val POSSIBLY_SLOWZONE_ROADS = listOf("residential", "unclassified", "tertiary" /*#1133*/)
         private val MAYBE_LIVING_STREET = listOf("residential", "unclassified")
         private val ROADS_WITH_DEFINITE_SPEED_LIMIT = listOf("trunk", "motorway", "living_street")
+
+        private var LAST_INPUT_SLOW_ZONE: Int? = null
     }
 }
 
 private enum class SpeedType {
-    SIGN, ZONE, ADVISORY, NO_SIGN
+    SIGN, ZONE, LIVING_STREET, ADVISORY, NO_SIGN
 }

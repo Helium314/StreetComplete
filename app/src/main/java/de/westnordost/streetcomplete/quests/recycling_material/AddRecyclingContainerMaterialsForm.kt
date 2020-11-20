@@ -6,9 +6,9 @@ import androidx.appcompat.app.AlertDialog
 import de.westnordost.streetcomplete.R
 import de.westnordost.streetcomplete.quests.AImageListQuestAnswerFragment
 import de.westnordost.streetcomplete.quests.OtherAnswer
-import de.westnordost.streetcomplete.view.ImageSelectAdapter
-import de.westnordost.streetcomplete.view.Item
-import de.westnordost.streetcomplete.view.dialogs.ImageListPickerDialog
+import de.westnordost.streetcomplete.view.image_select.ImageSelectAdapter
+import de.westnordost.streetcomplete.view.image_select.Item
+import de.westnordost.streetcomplete.view.image_select.ImageListPickerDialog
 import de.westnordost.streetcomplete.quests.recycling_material.RecyclingMaterial.*
 
 class AddRecyclingContainerMaterialsForm
@@ -20,15 +20,19 @@ class AddRecyclingContainerMaterialsForm
         OtherAnswer(R.string.quest_recycling_materials_answer_waste) { confirmJustTrash() }
     )
 
-    override val items = listOf(
-        Item(GLASS_BOTTLES, R.drawable.ic_recycling_glass_bottles, R.string.quest_recycling_type_glass_bottles),
+    override val items get() = listOf(
+        if (isAnyGlassRecycleable) {
+            Item(GLASS, R.drawable.ic_recycling_glass, R.string.quest_recycling_type_any_glass)
+        } else {
+            Item(GLASS_BOTTLES, R.drawable.ic_recycling_glass_bottles, R.string.quest_recycling_type_glass_bottles)
+        },
         Item(PAPER,         R.drawable.ic_recycling_paper,         R.string.quest_recycling_type_paper),
         Item(PLASTIC,       R.drawable.ic_recycling_plastic,       R.string.quest_recycling_type_plastic_generic),
         Item(CANS,          R.drawable.ic_recycling_cans,          R.string.quest_recycling_type_cans),
         Item(SCRAP_METAL,   R.drawable.ic_recycling_scrap_metal,   R.string.quest_recycling_type_scrap_metal),
         Item(CLOTHES,       R.drawable.ic_recycling_clothes,       R.string.quest_recycling_type_clothes),
         Item(SHOES,         R.drawable.ic_recycling_shoes,         R.string.quest_recycling_type_shoes),
-        Item(SMALL_ELECTRICAL_APPLIANCES, R.drawable.ic_recycling_electric_appliances, R.string.quest_recycling_type_electric_appliances),
+        Item(SMALL_ELECTRICAL_APPLIANCES, R.drawable.ic_recycling_small_electric_appliances, R.string.quest_recycling_type_electric_appliances),
         Item(BATTERIES,     R.drawable.ic_recycling_batteries,     R.string.quest_recycling_type_batteries),
         Item(GREEN_WASTE,   R.drawable.ic_recycling_garden_waste,  R.string.quest_recycling_type_green_waste),
         Item(COOKING_OIL,   R.drawable.ic_recycling_cooking_oil,   R.string.quest_recycling_type_cooking_oil),
@@ -42,6 +46,8 @@ class AddRecyclingContainerMaterialsForm
     )
 
     override val maxSelectableItems = -1
+
+    private val isAnyGlassRecycleable get() = countryInfo.isUsuallyAnyGlassRecycleableInContainers
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
