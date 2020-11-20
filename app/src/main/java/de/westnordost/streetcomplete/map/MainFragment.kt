@@ -150,6 +150,7 @@ class MainFragment : Fragment(R.layout.fragment_main),
         zoomInButton.setOnClickListener { onClickZoomIn() }
         zoomOutButton.setOnClickListener { onClickZoomOut() }
         mainMenuButton.setOnClickListener { onClickMainMenu() }
+        invertButton.setOnClickListener { onClickInvert() }
 
         updateMapQuestOffsets()
     }
@@ -480,6 +481,17 @@ class MainFragment : Fragment(R.layout.fragment_main),
 
     fun onClickMainMenu() {
         context?.let { MainMenuDialog(it, this::onClickDownload).show() }
+    }
+
+    fun onClickInvert() {
+        mapFragment?.invertQuests()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && invertButton.background.alpha == 254) {
+            invertButton.setBackgroundResource(R.drawable.ic_zoom_plus_black_24dp)
+            invertButton.background.alpha = 255
+        } else {
+            invertButton.setBackgroundResource(R.drawable.ic_zoom_minus_black_24dp)
+            invertButton.background.alpha = 254
+        }
     }
 
     private fun onClickZoomOut() {

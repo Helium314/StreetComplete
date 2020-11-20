@@ -157,6 +157,10 @@ class QuestsMapFragment : LocationAwareMapFragment() {
         centerCurrentPositionIfFollowing()
     }
 
+    fun invertQuests() {
+        questPinLayerManager.invertQuestOrder()
+    }
+
     private fun zoomAndMoveToContain(g: ElementGeometry, offset: RectF) {
         val controller = controller ?: return
         val pos = controller.getEnclosingCameraPosition(g.getBounds(), offset) ?: return

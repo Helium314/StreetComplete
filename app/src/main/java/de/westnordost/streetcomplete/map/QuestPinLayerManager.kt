@@ -42,6 +42,8 @@ class QuestPinLayerManager @Inject constructor(
 
     lateinit var mapFragment: MapFragment
 
+    private var invertedOrder = false
+
     var questsLayer: MapData? = null
         set(value) {
             if (field === value) return
@@ -172,6 +174,21 @@ class QuestPinLayerManager @Inject constructor(
                 questsById.values.flatten()
             }
         }
+    }
+
+    fun invertQuestOrder() {
+        if (invertedOrder) {
+            initializeQuestTypeOrders()
+            invertedOrder = false
+        } else {
+            var order = 0
+            for (questType in questTypesProvider.get().asReversed()) {
+                questTypeOrders[questType] = order++
+            }
+            invertedOrder = true
+        }
+        clear()
+        onNewScreenPosition()
     }
 
     private fun initializeQuestTypeOrders() {
