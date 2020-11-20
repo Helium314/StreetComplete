@@ -12,16 +12,20 @@
         <item>OFF</item>
     </string-array>
 
-    <string-array name="pref_entries_preset_select" translatable="false">
-        <item>"preset1"</item>
-        <item>"preset2"</item>
-        <item>"preset3"</item>
+    <string-array name="pref_entries_profile_select" translatable="false">
+        <item>"profile 1"</item>
+        <item>"profile 2"</item>
+        <item>"profile 3"</item>
+        <item>"profile 4"</item>
+        <item>"profile 5"</item>
     </string-array>
 
-    <string-array name="pref_entryvalues_preset_select" translatable="false">
+    <string-array name="pref_entryvalues_profile_select" translatable="false">
         <item>0</item>
         <item>1</item>
         <item>2</item>
+        <item>3</item>
+        <item>4</item>
     </string-array>
 
     <string-array name="pref_entries_resurvey_intervals">

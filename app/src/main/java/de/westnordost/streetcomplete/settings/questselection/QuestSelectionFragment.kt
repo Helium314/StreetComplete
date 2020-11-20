@@ -69,6 +69,21 @@ class QuestSelectionFragment
                 onDeselectAll()
                 return true
             }
+            R.id.action_copy_from -> {
+                context?.let {
+                    val profiles = arrayOf("profile 1","profile 2","profile 3","profile 4","profile 5",)
+                    AlertDialog.Builder(it)
+                        .setTitle("Copy from which profile?")
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .setSingleChoiceItems(profiles,-1) {
+                            dialogInterface, i ->
+                            copyFromProfile(i)
+                            dialogInterface.dismiss()
+                        }
+                        .show()
+                }
+                return true
+            }
         }
         return super.onOptionsItemSelected(item)
     }
@@ -93,6 +108,16 @@ class QuestSelectionFragment
                 visibleQuestTypeDao.setVisible(questType, false)
             }
         }
+        questSelectionAdapter.list = createQuestTypeVisibilityList()
+    }
+
+    private fun copyFromProfile(sourceProfile: Int) {
+        for (questType in questTypeRegistry.all) {
+            if (questType !is OsmNoteQuestType) {
+                visibleQuestTypeDao.setVisible(questType, visibleQuestTypeDao.isVisible(questType, sourceProfile))
+            }
+        }
+        questTypeOrderList.copyFrom(sourceProfile)
         questSelectionAdapter.list = createQuestTypeVisibilityList()
     }
 

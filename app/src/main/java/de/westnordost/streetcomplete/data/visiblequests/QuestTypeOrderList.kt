@@ -55,21 +55,34 @@ import javax.inject.Singleton
         orderLists = load()
     }
 
+    fun copyFrom(sourceProfile: Int) {
+        val fullorder = prefs.getString(Prefs.QUEST_ORDER, null).orEmpty().split("+").toMutableList()
+        // todo: make getting the index less weird?
+        val order = fullorder[sourceProfile]
+        val destProfile = prefs.getString(Prefs.QUEST_PROFILE,null)?.toIntOrNull() ?: 0
+        while (fullorder.size <= destProfile) {
+            fullorder.add("")
+        }
+        fullorder[destProfile] = order
+        prefs.edit { putString(Prefs.QUEST_ORDER, fullorder.joinToString("+")) }
+    }
+
     private fun load(): MutableList<MutableList<String>> {
         val fullorder = prefs.getString(Prefs.QUEST_ORDER, null)?.split("+")
-        val order = fullorder?.getOrNull(prefs.getString(Prefs.QUEST_PRESET,null)?.toIntOrNull() ?: 0)
+        // todo: make getting the index less weird?
+        val order = fullorder?.getOrNull(prefs.getString(Prefs.QUEST_PROFILE,null)?.toIntOrNull() ?: 0)
         return order?.split(DELIM1)?.map { it.split(DELIM2).toMutableList() }?.toMutableList() ?: mutableListOf()
     }
 
     private fun save(lists: List<List<String>>) {
         val joined = lists.joinToString(DELIM1) { it.joinToString(DELIM2) }
         val fullorder = prefs.getString(Prefs.QUEST_ORDER, null).orEmpty().split("+").toMutableList()
-        val index = prefs.getString(Prefs.QUEST_PRESET,null)?.toIntOrNull() ?: 0
+        val index = prefs.getString(Prefs.QUEST_PROFILE,null)?.toIntOrNull() ?: 0
         while (fullorder.size <= index) {
             fullorder.add("")
         }
         fullorder[index] = joined
-        prefs.edit { putString(Prefs.QUEST_ORDER, fullorder.joinToString("+")) } // in worst case i have sth like "+++", but should work
+        prefs.edit { putString(Prefs.QUEST_ORDER, fullorder.joinToString("+")) }
     }
 
     private fun applyOrderItem(before: QuestType<*>, after: QuestType<*>) {
